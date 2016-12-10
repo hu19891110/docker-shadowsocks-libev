@@ -1,13 +1,18 @@
 server:
-  image: easypi/shadowsocks-libev
+  image: tofuliang/docker-shadowsocks-libev 
   ports:
-    - "8388:8388/tcp"
-    - "8388:8388/udp"
+    - "23493:23493/tcp"
+    - "23493:23493/udp"
+    - "33493:33493/tcp"
+    - "33493:33493/udp"
   environment:
     - METHOD=aes-256-cfb
-    - PASSWORD=5ouMnqPyzseL
+    - PASSWORD=247KuvJYXm9v
+    - KCP_PORT=33493
+    - "KCP_OPTIONS=--key 2TBltAzll6hx"
+    - KCP_DSCP=46
   restart: always
-
+  command: /usr/local/bin/init.sh
 client:
   image: easypi/shadowsocks-libev
   command:
