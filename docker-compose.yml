@@ -1,40 +1,48 @@
 server:
-  image: tofuliang/docker-shadowsocks-libev 
+  image: tofuliang/docker-shadowsocks-libev
   ports:
     - "23493:23493/tcp"
     - "23493:23493/udp"
     - "33493:33493/tcp"
     - "33493:33493/udp"
   environment:
-    - METHOD=aes-256-cfb
-    - PASSWORD=247KuvJYXm9v
-    - KCP_PORT=33493
-    - "KCP_OPTIONS=--key 2TBltAzll6hx"
+#    - SS_SERVER_ADDR=0.0.0.0
+    - SS_SERVER_PORT=23493
+#    - SS_METHOD=aes-256-cfb
+    - SS_PASSWORD=247KuvJYXm9v
+#    - SS_TIMEOUT=60
+#    - DNS_ADDR=8.8.8.8
+#    - SS_OPTIONS=
+    - KCP_SERVER_PORT=33493
+    - KCP_CRYPT=none
+#    - KCP_MTU=1350
+#    - KCP_MODE=fast
     - KCP_DSCP=46
+    - "KCP_OPTIONS=--key 2TBltAzll6hx"
+  command: /usr/local/bin/server.sh
   restart: always
-  command: /usr/local/bin/init.sh
 client:
-  image: easypi/shadowsocks-libev
-  command:
-    ss-local -s 1.2.3.4
-             -p 8388
-             -m aes-256-cfb
-             -k 5ouMnqPyzseL
-             -b 0.0.0.0
-             -l 1080
-             -t 60
-             -A
-             --fast-open
+  image: tofuliang/docker-shadowsocks-libev
   ports:
-    - "1080:1080"
+    - "1080:1080/tcp"
+    - "1080:1080/udp"
+    - "33493:33493/tcp"
+    - "33493:33493/udp"
+  environment:
+    - KCP_LOCAL_PORT=33493
+    - KCP_SERVER_ADDR=1.2.3.4
+    - KCP_SERVER_PORT=33493
+    - KCP_CRYPT=none
+#    - KCP_MTU=1350
+#    - KCP_MODE=fast
+    - KCP_DSCP=46
+    - "KCP_OPTIONS=--key 2TBltAzll6hx"
+    - SS_LOCAL_PORT=1080
+    - SS_PASSWORD=247KuvJYXm9v
+#    - SS_METHOD=aes-256-cfb
+#    - SS_TIMEOUT=60
+#    - SS_LOCAL_ADDR=0.0.0.0
+#    - SS_OPTIONS=
+  command: /usr/local/bin/client.sh
   restart: always
 
-client-arm:
-  image: easypi/shadowsocks-libev-arm
-  ports:
-    - "1080:1080"
-  environment:
-    - SERVER_ADDR=1.2.3.4
-    - METHOD=aes-256-cfb
-    - PASSWORD=5ouMnqPyzseL
-  restart: always
