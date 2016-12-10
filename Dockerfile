@@ -10,7 +10,7 @@ ENV SS_URL https://github.com/shadowsocks/shadowsocks-libev/archive/v$SS_VER.tar
 ENV SS_DIR shadowsocks-libev-$SS_VER
 
 ENV KCP_VER 20161207
-ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v20161202/kcptun-linux-amd64-$KCP_VER.tar.gz
+ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v$KCP_VER/kcptun-linux-amd64-$KCP_VER.tar.gz
 
 RUN set -ex \
     && apk add --no-cache pcre \
