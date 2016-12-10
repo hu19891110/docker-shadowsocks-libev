@@ -35,7 +35,7 @@ RUN set -ex \
     && echo "#!/bin/sh" >> /usr/local/bin/init.sh \
     && echo "" >> /usr/local/bin/init.sh \
     && echo "nohup kcp_server -l :\$KCP_PORT -t 127.0.0.1:\$SERVER_PORT --crypt none --mtu 1200 --nocomp --mode normal --dscp 46 &" >> /usr/local/bin/init.sh \
-    && echo "ss-server -s "\$SERVER_ADDR" -p "\$SERVER_PORT" -m "\$METHOD" -k "\$PASSWORD" -t "\$TIMEOUT" -d "\$DNS_ADDR"-u -A --fast-open \$OPTIONS" >> /usr/local/bin/init.sh \
+    && echo "ss-server -s "\$SERVER_ADDR" -p "\$SERVER_PORT" -m "\$METHOD" -k "\$PASSWORD" -t "\$TIMEOUT" -d "\$DNS_ADDR" -u -A --fast-open \$OPTIONS" >> /usr/local/bin/init.sh \
     && chmod a+x /usr/local/bin/init.sh
 
 ENV SERVER_ADDR 0.0.0.0
