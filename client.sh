@@ -1,8 +1,9 @@
 #!/bin/sh
 
-nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
-nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR -u -A --fast-open $SS_OPTIONS &
-
+if [ "" != "$KCP_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
+    nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
+    nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR -u -A --fast-open $SS_OPTIONS &
+fi
 auth="authorization: Basic `echo $ARUKAS_TOKEN:$ARUKAS_SECERT|tr -d "\n" |base64|tr -d "\n"`"
 api=https://app.arukas.io/api/containers
 _kcpServerPort=x
@@ -50,11 +51,13 @@ while true; do
     open_udp_host=$(echo $json|jq '.data[0].attributes.port_mappings[0]['$_kcpUdpPortIndex'].host'|sed 's/"//g')
 
 
-    [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
-    [ "$KCP_SERVER_ADDR" != "$open_udp_host" ] && KCP_SERVER_ADDR=$open_udp_host && restart=true && export KCP_SERVER_ADDR
+    [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && [ "" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
+    [ "$KCP_SERVER_ADDR" != "$open_udp_host" ] && [ "" != "$open_udp_host" ] && KCP_SERVER_ADDR=$open_udp_host && restart=true && export KCP_SERVER_ADDR
 
     if [ $restart == true ];then
         echo "restarting..."
+        echo "KCP_SERVER_PORT: $KCP_SERVER_PORT"
+        echo "KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
         ps aux |grep kcp|grep -v grep|awk '{print $1}' |xargs kill -9
         nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
     fi
