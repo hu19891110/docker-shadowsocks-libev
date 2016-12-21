@@ -69,8 +69,10 @@ while true; do
 
     if [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -eq 0 ];then
         powerApi="https://app.arukas.io/api/containers/$_containerId/power"
+        echo "stopping container..."
         query "DELETE" "$auth" "$powerApi"
         sleep 3
+        echo "starting container..."
         query "POST" "$auth" "$powerApi"
     fi
     sleep $ARUKAS_CHECK_FEQ
