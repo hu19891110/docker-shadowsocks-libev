@@ -12,23 +12,28 @@ _kcpUdpPortIndex=x
 query() {
     wget --quiet \
     --no-check-certificate \
-    --method GET \
+    --method $1 \
     --header "'content-type: application/vnd.api+json'" \
     --header "'accept: application/vnd.api+json'" \
-    --header "$1" \
+    --header "$2" \
     --header "'cache-control: no-cache'" \
     --output-document \
-    - $2
+    - $3
 }
 
 while true; do
     restart=false
-    json=$(query "$auth" "$api")
+    json=$(query "GET" "$auth" "$api")
+    _containerId=$(echo $json|jq '.data[0].id'|sed 's/"//g')
     _envs=$(echo $json|jq '.data[0].attributes.envs')
     _envCount=$(echo $_envs |jq '.|length' )
     _ports=$(echo $json|jq '.data[0].attributes.ports')
     _portCount=$(echo $_ports |jq '.|length' )
     _portMappings=$(echo $json|jq '.data[0].attributes.port_mappings')
+    _updateAt=$(echo $json|jq '.data[0].attributes.updated_at')
+    _updateDate=$(echo $_updateAt|sed 's/"//g'|awk -FT '{print $1}')
+    _updateTimeStamp=$(date -d $_updateDate +%s)
+
     for i in `seq 0 $_envCount`;
     do
         _env=$(echo $_envs |jq '.['$i'].key'|sed 's/"//g')
@@ -60,6 +65,13 @@ while true; do
         echo "KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
         ps aux |grep kcp|grep -v grep|awk '{print $1}' |xargs kill -9
         nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
+    fi
+
+    if [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -eq 0 ];then
+        powerApi="https://app.arukas.io/api/containers/$_containerId/power"
+        query "DELETE" "$auth" "$powerApi"
+        sleep 3
+        query "POST" "$auth" "$powerApi"
     fi
     sleep $ARUKAS_CHECK_FEQ
 done
