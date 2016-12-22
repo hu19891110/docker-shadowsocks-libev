@@ -1,16 +1,6 @@
 docker-shadowsocks-libev
 ========================
 
-[![build](https://travis-ci.org/EasyPi/docker-shadowsocks-libev.svg)](https://travis-ci.org/EasyPi/docker-shadowsocks-libev)
-[![release](https://img.shields.io/github/release/EasyPi/docker-shadowsocks-libev.svg)](https://github.com/EasyPi/docker-shadowsocks-libev/releases/latest)
-[![stars](https://img.shields.io/docker/stars/easypi/shadowsocks-libev-arm.svg)](https://hub.docker.com/r/easypi/shadowsocks-libev-arm)
-[![pulls](https://img.shields.io/docker/pulls/easypi/shadowsocks-libev-arm.svg)](https://hub.docker.com/r/easypi/shadowsocks-libev-arm)
-
-name                               | size
----------------------------------- | ---------------------------------------------------------------------------
-[easypi/shadowsocks-libev][11]     | ![](https://badge.imagelayers.io/easypi/shadowsocks-libev:latest.svg)
-[easypi/shadowsocks-libev-arm][12] | ![](https://badge.imagelayers.io/easypi/shadowsocks-libev-arm:latest.svg)
-
 ## What is shadowsocks-libev
 
 [Shadowsocks-libev][1] is a lightweight secured SOCKS5 proxy for embedded devices
@@ -23,41 +13,22 @@ Current version: [![release](https://img.shields.io/github/release/shadowsocks/s
 
 ## How to use these images
 
-- Get [docker-compose.yml][7], then change `SERVER_ADDR` and `PASSWORD`.
+- Get [docker-compose.yml][7], then change `SS_SERVER_PORT` , `SS_PASSWORD`, `KCP_SERVER_PORT`, `KCP_CRYPT`, `KCP_MTU`, `KCP_DSCP`, `KCP_OPTIONS`,`ARUKAS_TOKEN`, `ARUKAS_SECERT`, `ARUKAS_CHECK_FEQ` provided in the file.
 
 - Run these commands:
 
-        # On x86 server (1.2.3.4)
-        $ docker-compose up -d server
+        # On Arukas server (1.2.3.4)
+        # set server ENV, start the container
 
         # On x86 client (192.168.1.234)
         $ docker-compose up -d client
 
-        # On arm client (192.168.1.254)
-        $ docker-compose up -d client-arm
-
         # On any LAN PC (192.168.1.XXX)
-        $ curl -x socks5h://192.168.1.234:1080 https://www.youtube.com/
-        $ curl -x socks5h://192.168.1.254:1080 https://www.youtube.com/
+        $ curl -x socks5h://192.168.1.234:1082 https://www.youtube.com/
+        $ curl -x http://192.168.1.234:7777 https://www.youtube.com/
 
 - Set socks5 proxy in your favorite web browser.
-
-## Deploy without docker
-
-```bash
-# download package
-wget https://github.com/EasyPi/docker-shadowsocks-libev/releases/download/v2.5.6/shadowsocks-libev_2.5.6-1_amd64.deb
-# install package
-dpkg -i shadowsocks-libev_2.5.6-1_amd64.deb
-# fix broken
-apt-get -f install -y
-# edit config
-vi /etc/shadowsocks-libev/config.json
-# restart service
-systemctl restart shadowsocks-libev
-```
-
-> Config file format: [config.json](https://shadowsocks.org/en/config/quick-guide.html)
+- Set http proxy in your favorite web browser.
 
 ## License
 
@@ -74,9 +45,5 @@ Feel free to send me pull requests. Thank you!
 [4]: https://github.com/madeye
 [5]: https://github.com/linusyang
 [6]: https://github.com/shadowsocks/shadowsocks-libev/releases/latest
-[7]: https://github.com/EasyPi/docker-shadowsocks-libev/raw/master/docker-compose.yml
-[8]: https://duckduckgo.com/?q=password+12&t=ffsb&ia=answer
+[7]: https://github.com/tofuliang/docker-shadowsocks-libev/raw/arukas/docker-compose.yml
 [9]: https://github.com/shadowsocks/shadowsocks-libev#license
-[10]: https://github.com/EasyPi/docker-shadowsocks-libev/issues
-[11]: https://hub.docker.com/r/easypi/shadowsocks-libev/
-[12]: https://hub.docker.com/r/easypi/shadowsocks-libev-arm/
