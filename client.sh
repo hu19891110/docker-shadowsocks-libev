@@ -68,7 +68,7 @@ while true; do
             echo "[EVENT] restarting KCP_CLIENT ..."
             ps aux |grep kcp|grep -v grep|awk '{print $1}' |xargs kill -9
         fi
-        [ "$KCP_SERVER_ADDR" != "" ] && [ "$KCP_SERVER_PORT" != "" ] && nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
+        [ "$KCP_SERVER_ADDR" != "null" ] && [ "$KCP_SERVER_PORT" != "null" ] && nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
     fi
     if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -eq 0 ];then
         powerApi="https://app.arukas.io/api/containers/$_containerId/power"
