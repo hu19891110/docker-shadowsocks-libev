@@ -12,6 +12,9 @@ ENV SS_DIR shadowsocks-libev-$SS_VER
 ENV KCP_VER 20161207
 ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v$KCP_VER/kcptun-linux-amd64-$KCP_VER.tar.gz
 
+ENV COW_VER 0.9.8
+ENV COW_URL https://github.com/cyfdecyf/cow/releases/download/$COW_VER/cow-linux64-$COW_VER.gz
+
 RUN set -ex \
     && apk add --no-cache pcre \
     && apk add --no-cache \
@@ -31,6 +34,10 @@ RUN set -ex \
         && curl -sSL $KCP_URL |tar xz -C /usr/local/bin \
         && mv /usr/local/bin/server_linux_amd64 /usr/local/bin/kcp-server \
         && mv /usr/local/bin/client_linux_amd64 /usr/local/bin/kcp-client \
+        && curl -sSL $COW_URL |gzip -d > /usr/local/bin/cow \
+        && chmod a+x /usr/local/bin/cow \
+        && mkdir /etc/cow \
+        && curl -sSL https://raw.githubusercontent.com/cyfdecyf/cow/master/doc/sample-config/rc > /etc/cow/rc \
     && apk del --virtual TMP \
     && echo "#!/bin/sh" >> /usr/local/bin/server.sh \
     && echo "" >> /usr/local/bin/server.sh \
@@ -65,6 +72,9 @@ ENV KCP_MODE fast
 ENV KCP_DSCP 0
 ENV KCP_OPTIONS=
 
+ENV COW_LOCAL_ADDR 0.0.0.0
+ENV COW_LOCAL_PORT 7777
+
 EXPOSE $SS_SERVER_PORT/tcp
 EXPOSE $SS_SERVER_PORT/udp
 EXPOSE $SS_LOCAL_PORT/tcp
@@ -73,5 +83,6 @@ EXPOSE $KCP_SERVER_PORT/tcp
 EXPOSE $KCP_SERVER_PORT/udp
 EXPOSE $KCP_LOCAL_PORT/tcp
 EXPOSE $KCP_LOCAL_PORT/udp
+EXPOSE $COW_LOCAL_PORT/tcp
 
 CMD /usr/local/bin/server.sh
