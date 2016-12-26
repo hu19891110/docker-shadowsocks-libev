@@ -89,7 +89,7 @@ while true; do
         && echo "estimateTarget = www.google.com" >> /etc/cow/rc.run \
         && echo "dialTimeout = 3s" >> /etc/cow/rc.run \
         && echo "proxy = ss://${SS_METHOD}-auth:${SS_PASSWORD}@127.0.0.1:${KCP_LOCAL_PORT}" >> /etc/cow/rc.run \
-        && echo "proxy = ss://${SS_METHOD}-auth:${SS_PASSWORD}@${KCP_SERVER_ADDR}:${SS_SERVER_PORT}" >> /etc/cow/rc.runx
+        && echo "proxy = ss://${SS_METHOD}-auth:${SS_PASSWORD}@${KCP_SERVER_ADDR}:${SS_SERVER_PORT}" >> /etc/cow/rc.run
         nohup cow -rc=/etc/cow/rc.run -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
     fi
     if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -eq 0 ];then
