@@ -48,6 +48,6 @@ client:
     - ARUKAS_TOKEN=YOUR_TOKEN
     - ARUKAS_SECERT=YOUR_SECERT
     - ARUKAS_CHECK_FEQ=40
+    - DEBUG=true
   command: /usr/local/bin/client.sh
   restart: always
-

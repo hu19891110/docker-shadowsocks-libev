@@ -1,15 +1,20 @@
 #!/bin/sh
 
 if [ "" != "$KCP_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
-    nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
+    nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
 fi
-nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR -A --fast-open $SS_OPTIONS &
+nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR -A --fast-open $SS_OPTIONS ${SS_DEBUG} &
 auth="authorization: Basic `echo $ARUKAS_TOKEN:$ARUKAS_SECERT|tr -d "\n" |base64|tr -d "\n"`"
 api=https://app.arukas.io/api/containers
 _kcpServerPort=x
 _kcpUdpPortIndex=x
 _ssServerPort=x
 _ssTcpPortIndex=x
+
+COW_DEBUG=""
+SS_DEBUG=""
+[ "$DEBUG" == "true" ] && COW_DEBUG="-debug"
+[ "$DEBUG" == "true" ] && SS_DEBUG="-v"
 
 query() {
     wget --quiet \
@@ -65,9 +70,9 @@ while true; do
     open_host=$(echo $json|jq '.data[0].attributes.port_mappings[0]['$_kcpUdpPortIndex'].host'|sed 's/"//g')
     open_tcp_port=$(echo $json|jq '.data[0].attributes.port_mappings[0]['$_ssTcpPortIndex'].service_port'|sed 's/"//g')
 
-    [ "$SS_SERVER_PORT" != "$open_tcp_port" ] && [ "null" != "$open_tcp_port" ] && SS_SERVER_PORT=$open_tcp_port && restart=true && export SS_SERVER_PORT
-    [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && [ "null" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
-    [ "$KCP_SERVER_ADDR" != "$open_host" ] && [ "null" != "$open_host" ] && KCP_SERVER_ADDR=$open_host && restart=true && export KCP_SERVER_ADDR
+    [ "$SS_SERVER_PORT" != "$open_tcp_port" ] && [ "null" != "$open_tcp_port" ] && [ "" != "$open_tcp_port" ] && SS_SERVER_PORT=$open_tcp_port && restart=true && export SS_SERVER_PORT
+    [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && [ "null" != "$open_udp_port" ] && [ "" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
+    [ "$KCP_SERVER_ADDR" != "$open_host" ] && [ "null" != "$open_host" ] && [ "" != "$open_host" ] && KCP_SERVER_ADDR=$open_host && restart=true && export KCP_SERVER_ADDR
 
     if [ $restart == true ] ;then
         echo "[EVENT] "`date`
@@ -82,7 +87,7 @@ while true; do
             ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
         fi
 
-        [ "$KCP_SERVER_ADDR"x != "x" ] && [ "$KCP_SERVER_PORT"x != "x" ] && nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS &
+        nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
         cp /etc/cow/rc /etc/cow/rc.run \
         && echo "alwaysProxy = true" >> /etc/cow/rc.run \
         && echo "loadBalance = backup" >> /etc/cow/rc.run \
@@ -90,9 +95,9 @@ while true; do
         && echo "dialTimeout = 3s" >> /etc/cow/rc.run \
         && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
         && echo "proxy = ss://${SS_METHOD}-auth:${SS_PASSWORD}@${KCP_SERVER_ADDR}:${SS_SERVER_PORT}" >> /etc/cow/rc.run
-        nohup cow -rc=/etc/cow/rc.run -debug -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
+        nohup cow -rc=/etc/cow/rc.run ${COW_DEBUG} -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
     fi
-    if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -eq 0 ];then
+    if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -gt 0 ];then
         powerApi="https://app.arukas.io/api/containers/$_containerId/power"
         echo "[EVENT] "`date`
         echo "[EVENT] stopping container..."
