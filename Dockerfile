@@ -14,4 +14,4 @@ RUN set -ex \
     && apk add --no-cache wget jq \
     && chmod a+x /usr/local/bin/client.sh
 
-CMD /usr/local/bin/server.sh
+CMD /usr/local/bin/client.sh
