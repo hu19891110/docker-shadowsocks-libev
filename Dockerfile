@@ -5,11 +5,11 @@
 FROM alpine
 MAINTAINER tofuliang@gmail.com
 
-ENV SS_VER 2.5.6
+ENV SS_VER 2.6.1
 ENV SS_URL https://github.com/shadowsocks/shadowsocks-libev/archive/v$SS_VER.tar.gz
 ENV SS_DIR shadowsocks-libev-$SS_VER
 
-ENV KCP_VER 20161207
+ENV KCP_VER 20161222
 ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v$KCP_VER/kcptun-linux-amd64-$KCP_VER.tar.gz
 
 ENV COW_VER 0.9.8
@@ -38,7 +38,7 @@ RUN set -ex \
         && chmod a+x /usr/local/bin/cow \
         && mkdir /etc/cow \
         && curl -sSL https://raw.githubusercontent.com/cyfdecyf/cow/master/doc/sample-config/rc > /etc/cow/rc \
-    && apk del --virtual TMP \
+    && apk del TMP \
     && echo "#!/bin/sh" >> /usr/local/bin/server.sh \
     && echo "" >> /usr/local/bin/server.sh \
     && echo "nohup kcp-server -l :\$KCP_SERVER_PORT -t 127.0.0.1:\$SS_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
