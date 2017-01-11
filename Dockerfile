@@ -43,15 +43,11 @@ RUN set -ex \
     && apk del TMP \
     && echo "#!/bin/sh" >> /usr/local/bin/server.sh \
     && echo "" >> /usr/local/bin/server.sh \
+    && echo "cd /lib && ln -s libcrypto.so.38 libcrypto.so.1.0.0" >> /usr/local/bin/server.sh \
+    && echo "cd /usr/lib && ln -s ../../lib/libcrypto.so.1.0.0 libcrypto.so.1.0.0" >> /usr/local/bin/server.sh \
     && echo "nohup kcp-server -l :\$KCP_SERVER_PORT -t 127.0.0.1:\$SS_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
     && echo "ss-server -s "\$SS_SERVER_ADDR" -p "\$SS_SERVER_PORT" -m "\$SS_METHOD" -k "\$SS_PASSWORD" -t "\$SS_TIMEOUT" -d "\$DNS_ADDR" -u -A --fast-open \$SS_OPTIONS" >> /usr/local/bin/server.sh \
     && chmod a+x /usr/local/bin/server.sh \
-    \
-    && echo "#!/bin/sh" >> /usr/local/bin/client.sh \
-    && echo "" >> /usr/local/bin/client.sh \
-    && echo "nohup kcp-client -l :\$KCP_LOCAL_PORT -r \$KCP_SERVER_ADDR:\$KCP_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/client.sh \
-    && echo "ss-local -s 127.0.0.1 -p "\$KCP_LOCAL_PORT"  -l \$SS_LOCAL_PORT -k "\$SS_PASSWORD" -m "\$SS_METHOD" -t "\$SS_TIMEOUT" -b \$SS_LOCAL_ADDR -u -A --fast-open \$SS_OPTIONS" >> /usr/local/bin/client.sh \
-    && chmod a+x /usr/local/bin/client.sh
 
 
 ENV SS_SERVER_ADDR 0.0.0.0
