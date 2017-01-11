@@ -17,6 +17,8 @@ ENV COW_URL https://github.com/cyfdecyf/cow/releases/download/$COW_VER/cow-linux
 
 RUN set -ex \
     && apk add --no-cache pcre \
+    && cd /lib && ln -s libcrypto.so.38 libcrypto.so.1.0.0 \
+    && cd /usr/lib && ln -s ../../lib/libcrypto.so.1.0.0 libcrypto.so.1.0.0 \
     && apk add --no-cache \
                --virtual TMP autoconf \
                              build-base \
