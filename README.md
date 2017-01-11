@@ -17,11 +17,8 @@ Current version: [![release](https://img.shields.io/github/release/shadowsocks/s
 
 - Run these commands:
 
-        # On Arukas server (1.2.3.4)
-        # set server ENV, start the container
-
         # On x86 client (192.168.1.234)
-        $ docker-compose up -d client
+        $ docker-compose up -d
 
         # On any LAN PC (192.168.1.XXX)
         $ curl -x socks5h://192.168.1.234:1082 https://www.youtube.com/
