@@ -47,7 +47,7 @@ RUN set -ex \
     && echo "cd /usr/lib && ln -s ../../lib/libcrypto.so.1.0.0 libcrypto.so.1.0.0" >> /usr/local/bin/server.sh \
     && echo "nohup kcp-server -l :\$KCP_SERVER_PORT -t 127.0.0.1:\$SS_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
     && echo "ss-server -s "\$SS_SERVER_ADDR" -p "\$SS_SERVER_PORT" -m "\$SS_METHOD" -k "\$SS_PASSWORD" -t "\$SS_TIMEOUT" -d "\$DNS_ADDR" -u -A --fast-open \$SS_OPTIONS" >> /usr/local/bin/server.sh \
-    && chmod a+x /usr/local/bin/server.sh \
+    && chmod a+x /usr/local/bin/server.sh
 
 
 ENV SS_SERVER_ADDR 0.0.0.0
