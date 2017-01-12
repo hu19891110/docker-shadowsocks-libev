@@ -24,5 +24,6 @@ client:
     - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
     - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
     - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+#    - TIMEZONE=8 # 日志中时间采用时区
   command: /usr/local/bin/client.sh
   restart: always

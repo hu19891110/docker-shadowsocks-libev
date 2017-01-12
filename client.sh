@@ -23,8 +23,16 @@ WGET_DEBUG="-q"
 [ "$DEBUG" == "true" ] && SS_DEBUG="-v"
 [ "$DEBUG" == "true" ] && WGET_DEBUG="-d -v "
 
+TIMEZONE=8
 noContainerCount=0
 noPortCount=0
+
+getLocalTime(){
+    addSec=$(($TIMEZONE * 3600))
+    timeStamp=$((`date -u +%s` + $addSec))
+    time=$(date -d @$timeStamp|sed 's/Jan/01/g;s/Feb/02/g;s/Mar/03/g;s/Apr/04/g;s/May/05/g;s/Jun/06/g;s/Jul/07/g;s/Aug/08/g;s/Sep/09/g;s/Oct/10/g;s/Nov/11/g;s/Dec/12/g')
+    echo $time|awk '{print $6"/"$2"/"$3" "$4}'
+}
 
 query() {
     wget ${WGET_DEBUG} \
@@ -40,20 +48,20 @@ query() {
 }
 
 createApp(){
-    echo "[EVENT] creating app..."
+    echo "[EVENT] "`getLocalTime`" creating app..."
     query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_OPTIONS}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp\"} } ] }"
 }
 
 powerUpContainer(){
     containerId=$(getContainerId)
     powerApi="https://app.arukas.io/api/containers/$containerId/power"
-    echo "[EVENT] starting container..."
+    echo "[EVENT] "`getLocalTime`" starting container..."
     query "POST" "$auth" "$powerApi"
     sleep 3
-    echo "[EVENT] stopping container..."
+    echo "[EVENT] "`getLocalTime`" stopping container..."
     query "DELETE" "$auth" "$powerApi"
     sleep 3
-    echo "[EVENT] starting container..."
+    echo "[EVENT] "`getLocalTime`" starting container..."
     query "POST" "$auth" "$powerApi"
 
 }
@@ -106,17 +114,17 @@ getContainerInfo(){
 }
 
 resetGfwApp(){
-    echo "[EVENT] resetGfwApp ..."
+    echo "[EVENT] "`getLocalTime`" resetGfwApp ..."
 
     containerId=$(getContainerId)
-    echo "[EVENT] got containerId ... $containerId"
+    echo "[EVENT] "`getLocalTime`" got containerId ... $containerId"
 
     [ "$containerId" = "" ] && noContainerCount=$(($noContainerCount + 1))
 
-    echo "noContainerCount=$noContainerCount"
+    echo "[EVENT] "`getLocalTime`" noContainerCount=$noContainerCount"
 
     containerInfo=$(getContainerInfo "$containerId")
-    echo "[EVENT] got containerInfo ... $containerInfo"
+    echo "[EVENT] "`getLocalTime`" got containerInfo ... $containerInfo"
 
     _envs=$(echo $containerInfo|jq '.attributes.envs')
     _envCount=$(echo $_envs |jq '.|length' )
@@ -157,7 +165,7 @@ resetGfwApp(){
     open_tcp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_ssTcpPortIndex'].service_port'|sed 's/"//g')
 
     [ "$open_udp_port" = "null" ] && [ "$containerId" != "" ] && noPortCount=$(($noPortCount + 1))
-    echo "noPortCount=$noPortCount"
+    echo "[EVENT] "`getLocalTime`" noPortCount=$noPortCount"
 
     restart=false
 
@@ -166,7 +174,7 @@ resetGfwApp(){
     [ "$KCP_SERVER_ADDR" != "$open_host" ] && [ "null" != "$open_host" ] && [ "" != "$open_host" ] && KCP_SERVER_ADDR=$open_host && restart=true && export KCP_SERVER_ADDR
 
     if [ $restart == true ] ;then
-        echo "[EVENT] "`date`
+        echo "[EVENT] "`getLocalTime`
         echo "[EVENT] KCP_SERVER_PORT: $KCP_SERVER_PORT"
         echo "[EVENT] KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
         if [ `ps aux |grep kcp|grep -v grep|wc -l` -gt 0 ]; then
