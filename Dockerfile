@@ -16,7 +16,7 @@ ENV COW_VER 0.9.8
 ENV COW_URL https://github.com/cyfdecyf/cow/releases/download/$COW_VER/cow-linux64-$COW_VER.gz
 
 RUN set -ex \
-    && apk add --no-cache pcre \
+    && apk add --no-cache pcre openssh \
     && apk add --no-cache \
                --virtual TMP autoconf \
                              build-base \
@@ -41,8 +41,12 @@ RUN set -ex \
     && apk del TMP \
     && cd /lib && ln -s libcrypto.so.38 libcrypto.so.1.0.0 \
     && cd /usr/lib && ln -s ../../lib/libcrypto.so.1.0.0 libcrypto.so.1.0.0 \
+    && ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -P "" \
+    && echo "PermitRootLogin yes"  >> /etc/ssh/sshd_config \
     && echo "#!/bin/sh" >> /usr/local/bin/server.sh \
     && echo "" >> /usr/local/bin/server.sh \
+    && echo "echo root:${SSH_PASS}|chpasswd;" >> /usr/local/bin/server.sh \
+    && echo "/usr/sbin/sshd;" >> /usr/local/bin/server.sh \
     && echo "nohup kcp-server -l :\$KCP_SERVER_PORT -t 127.0.0.1:\$SS_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
     && echo "ss-server -s "\$SS_SERVER_ADDR" -p "\$SS_SERVER_PORT" -m "\$SS_METHOD" -k "\$SS_PASSWORD" -t "\$SS_TIMEOUT" -d "\$DNS_ADDR" -u -A --fast-open \$SS_OPTIONS" >> /usr/local/bin/server.sh \
     && chmod a+x /usr/local/bin/server.sh
@@ -57,6 +61,7 @@ ENV SS_TIMEOUT     60
 ENV DNS_ADDR       8.8.8.8
 ENV SS_PASSWORD=
 ENV SS_OPTIONS=
+ENV SSH_PASS=toor
 
 
 ENV KCP_SERVER_ADDR=
@@ -70,15 +75,5 @@ ENV KCP_OPTIONS=
 
 ENV COW_LOCAL_ADDR 0.0.0.0
 ENV COW_LOCAL_PORT 7777
-
-EXPOSE $SS_SERVER_PORT/tcp
-EXPOSE $SS_SERVER_PORT/udp
-EXPOSE $SS_LOCAL_PORT/tcp
-EXPOSE $SS_LOCAL_PORT/udp
-EXPOSE $KCP_SERVER_PORT/tcp
-EXPOSE $KCP_SERVER_PORT/udp
-EXPOSE $KCP_LOCAL_PORT/tcp
-EXPOSE $KCP_LOCAL_PORT/udp
-EXPOSE $COW_LOCAL_PORT/tcp
 
 CMD /usr/local/bin/server.sh

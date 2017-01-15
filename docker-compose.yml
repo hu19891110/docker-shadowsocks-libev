@@ -5,6 +5,7 @@ server:
     - "23493:23493/udp"
     - "33493:33493/tcp"
     - "33493:33493/udp"
+    - "22:22/tcp"
   environment:
 #    - SS_SERVER_ADDR=0.0.0.0
     - SS_SERVER_PORT=23493
@@ -19,6 +20,7 @@ server:
 #    - KCP_MODE=fast
     - KCP_DSCP=0
     - "KCP_OPTIONS=--key 2TBltAzll6hx --nocomp --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5"
+    - SSH_PASS=toor
   command: /usr/local/bin/server.sh
   restart: always
 client:
