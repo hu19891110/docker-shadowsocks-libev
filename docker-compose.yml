@@ -7,19 +7,19 @@ client:
   environment:
 #    - DEBUG=true # 是否输出调试日志
     - TERM=xterm
-#    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
-#    - KCP_SERVER_ADDR=1.2.3.4  # KCP服务器地址(容器运行后自动到arukas.io创建并获取)
-#    - KCP_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SERVER_PORT=31214 # KCP 服务器监听端口
     - KCP_CRYPT=salsa20  # KCP流量加密算法
     - KCP_MTU=512 # KCP 参数
-#    - KCP_MODE=fast
+    - KCP_MODE=fast2
     - KCP_DSCP=0 # KCP 参数
-    - "KCP_OPTIONS=--key 2TBltAzll6hx --nocomp --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5" # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5" # KCP 参数
     - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
     - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
-#    - SS_METHOD=aes-256-cfb  # shadowsocks 流量加密算法
-#    - SS_TIMEOUT=60  # shadowsocks 超时时间
-#    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+    - SS_METHOD=aes-256-cfb  # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
 #    - SS_OPTIONS=  # shadowsocks 参数
     - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
     - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
