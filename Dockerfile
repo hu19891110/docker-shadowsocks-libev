@@ -55,8 +55,6 @@ RUN set -ex \
         && mkdir /etc/cow \
         && curl -sSL https://raw.githubusercontent.com/cyfdecyf/cow/master/doc/sample-config/rc > /etc/cow/rc \
     && apk del TMP \
-    && cd /lib && ln -s libcrypto.so.38 libcrypto.so.1.0.0 \
-    && cd /usr/lib && ln -s ../../lib/libcrypto.so.1.0.0 libcrypto.so.1.0.0 \
     && ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -P "" \
     && echo "PermitRootLogin yes"  >> /etc/ssh/sshd_config \
     && echo "#!/bin/sh" >> /usr/local/bin/server.sh \
