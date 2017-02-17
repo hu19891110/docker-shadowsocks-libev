@@ -1,5 +1,9 @@
 #!/bin/sh
 
+idRsaCopyed=false
+
+ssh-keygen -t rsa -f /root/.ssh/id_rsa -P ""
+
 if [ "" != "$KCP_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
     nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
 fi
@@ -15,6 +19,7 @@ _kcpServerPort=x
 _kcpUdpPortIndex=x
 _ssServerPort=x
 _ssTcpPortIndex=x
+_sshTcpPortIndex=x
 
 COW_DEBUG=""
 SS_DEBUG=""
@@ -28,6 +33,24 @@ TIMEZONE=8
 noContainerCount=0
 noPortCount=0
 checkFeq=$ARUKAS_CHECK_FEQ
+
+copyIdRsa(){
+    if [ $idRsaCopyed == false ] ;then
+        echo "[EVENT] "`getLocalTime`" copying id_rsa.pub to server ..."
+        echo "[EVENT] KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
+        echo "[EVENT] SSH_SERVER_PORT: $SSH_SERVER_PORT"
+
+        sshpass -p "${SSH_PASS}" scp -o StrictHostKeyChecking=no -P${SSH_SERVER_PORT} /root/.ssh/id_rsa.pub root@${KCP_SERVER_ADDR}:/tmp/$(hostname)
+        sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${SSH_SERVER_PORT} root@${KCP_SERVER_ADDR} "mkdir -p /root/.ssh"
+        sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${SSH_SERVER_PORT} root@${KCP_SERVER_ADDR} "cat /tmp/$(hostname) >> /root/.ssh/authorized_keys && chmod -R 600 /root/.ssh/"
+
+        echo "Host ss" > ~/.ssh/config
+        echo "HostName ${KCP_SERVER_ADDR}"  >> ~/.ssh/config
+        echo "Port ${SSH_SERVER_PORT}"  >> ~/.ssh/config
+
+        idRsaCopyed=true
+    fi
+}
 
 getLocalTime(){
     addSec=$(($TIMEZONE * 3600))
@@ -52,7 +75,7 @@ query() {
 createApp(){
     echo "[EVENT] "`getLocalTime`" creating app..."
     KCP_SRV_OPTION=`echo $KCP_OPTIONS|sed 's/--conn\s*[0-9]*//g'|sed 's/--autoexpire\s*[0-9]*//g'`
-    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp\"} } ] }"
+    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp\"} } ] }"
 }
 
 powerUpContainer(){
@@ -89,6 +112,7 @@ deleteApps(){
             query "DELETE" "$auth" "$deleteApi"
         fi
     done
+    idRsaCopyed=false
 }
 getContainerId(){
 #    echo "[EVENT] getting containerId..."
@@ -175,22 +199,29 @@ resetGfwApp(){
             if [ "$_protocol" = "tcp" ] && [ "$_protocol_port" = "$_ssServerPort" ] ;then
                 _ssTcpPortIndex=$i
             fi
+            if [ "$_protocol" = "tcp" ] && [ "$_protocol_port" = "22" ] ;then
+                _sshTcpPortIndex=$i
+            fi
         done
 
         open_udp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_kcpUdpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
         open_host=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_kcpUdpPortIndex'].host'|sed 's/"//g' 2>/dev/null)
         open_tcp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_ssTcpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
+        ssh_tcp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_sshTcpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
 
         restart=false
 
         [ "$SS_SERVER_PORT" != "$open_tcp_port" ] && [ "null" != "$open_tcp_port" ] && [ "" != "$open_tcp_port" ] && SS_SERVER_PORT=$open_tcp_port && restart=true && export SS_SERVER_PORT
         [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && [ "null" != "$open_udp_port" ] && [ "" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
         [ "$KCP_SERVER_ADDR" != "$open_host" ] && [ "null" != "$open_host" ] && [ "" != "$open_host" ] && KCP_SERVER_ADDR=$open_host && restart=true && export KCP_SERVER_ADDR
+        [ "$SSH_SERVER_PORT" != "$ssh_tcp_port" ] && [ "null" != "$ssh_tcp_port" ] && [ "" != "$ssh_tcp_port" ] && SSH_SERVER_PORT=$ssh_tcp_port && restart=true && export SSH_SERVER_PORT
 
         if [ $restart == true ] ;then
             echo "[EVENT] "`getLocalTime`
-            echo "[EVENT] KCP_SERVER_PORT: $KCP_SERVER_PORT"
             echo "[EVENT] KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
+            echo "[EVENT] KCP_SERVER_PORT: $KCP_SERVER_PORT"
+            echo "[EVENT] SSH_SERVER_PORT: $SSH_SERVER_PORT"
+            echo "[EVENT] SS_SERVER_PORT: $SS_SERVER_PORT"
             if [ `ps aux |grep kcp|grep -v grep|wc -l` -gt 0 ]; then
                 echo "[EVENT] restarting KCP_CLIENT ..."
                 ps aux |grep kcp|grep -v grep|awk '{print $1}' |xargs kill -9
@@ -200,6 +231,8 @@ resetGfwApp(){
                 ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
             fi
 
+            copyIdRsa
+
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
             cp /etc/cow/rc /etc/cow/rc.run \
             && echo "alwaysProxy = true" >> /etc/cow/rc.run \
@@ -207,7 +240,7 @@ resetGfwApp(){
             && echo "estimateTarget = www.google.com" >> /etc/cow/rc.run \
             && echo "dialTimeout = 3s" >> /etc/cow/rc.run \
             && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
-            && echo "proxy = ss://${SS_METHOD}-auth:${SS_PASSWORD}@${KCP_SERVER_ADDR}:${SS_SERVER_PORT}" >> /etc/cow/rc.run
+            && echo "sshServer = root@${KCP_SERVER_ADDR}:8088:${SSH_SERVER_PORT}" >> /etc/cow/rc.run
             nohup cow -rc=/etc/cow/rc.run ${COW_DEBUG} -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
         fi
 

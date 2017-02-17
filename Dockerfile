@@ -11,7 +11,7 @@ ENV ARUKAS_CHECK_FEQ 40
 
 COPY client.sh /usr/local/bin/client.sh
 RUN set -ex \
-    && apk add --no-cache wget jq \
+    && apk add --no-cache wget jq sshpass \
     && chmod a+x /usr/local/bin/client.sh
 
 CMD /usr/local/bin/client.sh
