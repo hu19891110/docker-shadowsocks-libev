@@ -5,28 +5,44 @@
 FROM alpine
 MAINTAINER tofuliang@gmail.com
 
-ENV SS_VER 2.6.2
+ENV SS_VER 3.0.2
 ENV SS_URL https://github.com/shadowsocks/shadowsocks-libev/archive/v$SS_VER.tar.gz
 ENV SS_DIR shadowsocks-libev-$SS_VER
 
-ENV KCP_VER 20170117
+ENV KCP_VER 20170120
 ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v$KCP_VER/kcptun-linux-amd64-$KCP_VER.tar.gz
 
 ENV COW_VER 0.9.8
 ENV COW_URL https://github.com/cyfdecyf/cow/releases/download/$COW_VER/cow-linux64-$COW_VER.gz
 
 RUN set -ex \
-    && apk add --no-cache pcre openssh \
+    && apk add --no-cache libcrypto1.0 \
+                          libev \
+                          libsodium \
+                          mbedtls \
+                          pcre \
+                          udns \
+			  openssh \
     && apk add --no-cache \
                --virtual TMP autoconf \
+                             automake \
                              build-base \
                              curl \
+                             gettext-dev \
+                             libev-dev \
+                             libsodium-dev \
                              libtool \
                              linux-headers \
+                             mbedtls-dev \
                              openssl-dev \
                              pcre-dev \
+                             tar \
+                             udns-dev \
     && curl -sSL $SS_URL | tar xz \
     && cd $SS_DIR \
+        && curl -sSL https://github.com/shadowsocks/ipset/archive/shadowsocks.tar.gz | tar xz --strip 1 -C libipset \
+        && curl -sSL https://github.com/shadowsocks/libcork/archive/shadowsocks.tar.gz | tar xz --strip 1 -C libcork \
+        && ./autogen.sh \
         && ./configure --disable-documentation \
         && make -j${NPROC} install \
         && cd .. \
