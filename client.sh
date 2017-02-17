@@ -37,8 +37,6 @@ checkFeq=$ARUKAS_CHECK_FEQ
 copyIdRsa(){
     if [ $idRsaCopyed == false ] ;then
         echo "[EVENT] "`getLocalTime`" copying id_rsa.pub to server ..."
-        echo "[EVENT] KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
-        echo "[EVENT] SSH_SERVER_PORT: $SSH_SERVER_PORT"
 
         sshpass -p "${SSH_PASS}" scp -o StrictHostKeyChecking=no -P${SSH_SERVER_PORT} /root/.ssh/id_rsa.pub root@${KCP_SERVER_ADDR}:/tmp/$(hostname)
         sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${SSH_SERVER_PORT} root@${KCP_SERVER_ADDR} "mkdir -p /root/.ssh"
@@ -75,7 +73,7 @@ query() {
 createApp(){
     echo "[EVENT] "`getLocalTime`" creating app..."
     KCP_SRV_OPTION=`echo $KCP_OPTIONS|sed 's/--conn\s*[0-9]*//g'|sed 's/--autoexpire\s*[0-9]*//g'`
-    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp\"} } ] }"
+    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp-${ARUKAS_CONTAINER_NAME}\"} } ] }"
 }
 
 powerUpContainer(){
@@ -105,7 +103,7 @@ deleteApps(){
     for i in `seq 0 $_appCount`;
     do
         _appName=$(echo $_apps|jq '.['$i'].attributes.name'|sed 's/"//g' 2>/dev/null)
-        if [ "$_appName" = "ss-kcp" ] ; then
+        if [ "$_appName" = "ss-kcp-${ARUKAS_CONTAINER_NAME}" ] ; then
             _appId=$(echo $_apps|jq '.['$i'].id'|sed 's/"//g' 2>/dev/null)
             deleteApi="https://app.arukas.io/api/apps/$_appId"
             echo "[EVENT] deleteing app... [$_appId]"
@@ -123,7 +121,7 @@ getContainerId(){
     for i in `seq 0 $_appCount`;
     do
         _appName=$(echo $_apps|jq '.['$i'].attributes.name'|sed 's/"//g' 2>/dev/null)
-        if [ "$_appName" = "ss-kcp" ] ; then
+        if [ "$_appName" = "ss-kcp-${ARUKAS_CONTAINER_NAME}" ] ; then
                 _containerId=$(echo $_apps|jq '.['$i'].relationships.container.data.id'|sed 's/"//g' 2>/dev/null)
         fi
     done
