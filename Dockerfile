@@ -8,6 +8,7 @@ MAINTAINER tofuliang@gmail.com
 ENV ARUKAS_TOKEN=
 ENV ARUKAS_SECERT=
 ENV ARUKAS_CHECK_FEQ 40
+ENV GLOBAL_PROXY=true
 
 COPY client.sh /usr/local/bin/client.sh
 RUN set -ex \
