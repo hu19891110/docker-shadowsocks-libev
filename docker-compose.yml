@@ -21,10 +21,13 @@ client:
     - SS_TIMEOUT=60  # shadowsocks 超时时间
     - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
 #    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
     - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
     - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
     - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
 #    - TIMEZONE=8 # 日志中时间采用时区
 #    - SSH_PASS=toor # SSH 登陆密码
   command: /usr/local/bin/client.sh
   restart: always
+
