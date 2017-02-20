@@ -235,9 +235,10 @@ resetGfwApp(){
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
             cp /etc/cow/rc /etc/cow/rc.run \
             && echo "alwaysProxy = ${GLOBAL_PROXY}" >> /etc/cow/rc.run \
-            && echo "loadBalance = backup" >> /etc/cow/rc.run \
+            && echo "loadBalance = latency" >> /etc/cow/rc.run \
             && echo "estimateTarget = www.google.com" >> /etc/cow/rc.run \
             && echo "dialTimeout = 3s" >> /etc/cow/rc.run \
+            && echo "readTimeout = 2s" >> /etc/cow/rc.run \
             && echo "detectSSLErr = true" >> /etc/cow/rc.run \
             && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
             && echo "sshServer = root@${KCP_SERVER_ADDR}:8088:${SSH_SERVER_PORT}" >> /etc/cow/rc.run
