@@ -32,7 +32,17 @@ TIMEZONE=8
 
 noContainerCount=0
 noPortCount=0
+googleConnectFailedCount=0
 checkFeq=$ARUKAS_CHECK_FEQ
+
+checkGoogleConnection(){
+    t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:7777 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
+    if [ "$t" != "" ];then
+        echo $t
+    else
+        echo 0
+    fi
+}
 
 copyIdRsa(){
     if [ $idRsaCopyed == false ] ;then
@@ -152,8 +162,14 @@ resetGfwApp(){
     echo "[EVENT] "`getLocalTime`" got containerId ... $containerId"
 
     [ "$containerId" = "" ] && noContainerCount=$(($noContainerCount + 1))
-
     echo "[EVENT] "`getLocalTime`" noContainerCount=$noContainerCount"
+
+    httpCode=$(checkGoogleConnection)
+    echo "[EVENT] "`getLocalTime`" got Google httpCode ... $httpCode"
+
+    [ $httpCode -lt 200 ] && googleConnectFailedCount=$(($googleConnectFailedCount + 1))
+    echo "[EVENT] "`getLocalTime`" googleConnectFailedCount=$googleConnectFailedCount"
+
 
     if [ $checkFeq -gt 0 ];then
         if [ $noPortCount -gt 0 ] || [ $noContainerCount -gt 0 ];then
@@ -266,6 +282,18 @@ resetGfwApp(){
         sleep 10
         noPortCount=0
         noContainerCount=0
+        googleConnectFailedCount=0
+    fi
+
+    if [ $googleConnectFailedCount -gt 2 ];then
+        deleteApps
+        echo $(createApp)
+        sleep 5
+        echo $(powerUpContainer)
+        sleep 10
+        noPortCount=0
+        noContainerCount=0
+        googleConnectFailedCount=0
     fi
 
     if [ $noContainerCount -gt 5 ];then
@@ -276,6 +304,7 @@ resetGfwApp(){
         sleep 10
         noPortCount=0
         noContainerCount=0
+        googleConnectFailedCount=0
     fi
 
     if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -gt 0 ];then
