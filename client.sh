@@ -322,6 +322,6 @@ resetGfwApp(){
 }
 
 echo $auth
-while true; do
+while [[ true ]]; do
     resetGfwApp
 done
