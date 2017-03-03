@@ -15,6 +15,9 @@ ENV KCP_URL https://github.com/xtaci/kcptun/releases/download/v$KCP_VER/kcptun-l
 ENV COW_VER 0.9.8
 ENV COW_URL https://github.com/cyfdecyf/cow/releases/download/$COW_VER/cow-linux64-$COW_VER.gz
 
+ENV POLIPO_RUL https://github.com/tofuliang/polipo/archive/master.tar.gz
+ENV POLIPO_DIR polipo-master
+
 RUN set -ex \
     && apk add --no-cache libcrypto1.0 \
                           libev \
@@ -48,13 +51,21 @@ RUN set -ex \
         && make -j${NPROC} install \
         && cd .. \
         && rm -rf $SS_DIR \
-        && curl -sSL $KCP_URL |tar xz -C /usr/local/bin \
+    && curl -sSL $KCP_URL |tar xz -C /usr/local/bin \
         && mv /usr/local/bin/server_linux_amd64 /usr/local/bin/kcp-server \
         && mv /usr/local/bin/client_linux_amd64 /usr/local/bin/kcp-client \
         && curl -sSL $COW_URL |gzip -d > /usr/local/bin/cow \
         && chmod a+x /usr/local/bin/cow \
         && mkdir /etc/cow \
         && curl -sSL https://raw.githubusercontent.com/cyfdecyf/cow/master/doc/sample-config/rc > /etc/cow/rc \
+    && curl -sSL $POLIPO_RUL |tar xz \
+        && cd $POLIPO_DIR \
+        && make -j${NPROC} \
+        && cp polipo /usr/local/bin/ \
+        && mkdir /var/cache/polipo \
+        && mkdir /etc/polipo && cp config.sample /etc/polipo/config \
+        && cd .. \
+        && rm -fr $POLIPO_DIR \
     && { find /usr/local/bin  -type f -regex ".[^\.]*" -exec strip --strip-all '{}' + || true; } \
     && apk del TMP \
     && ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -P "" \
