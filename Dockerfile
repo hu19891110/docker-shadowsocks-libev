@@ -1,11 +1,11 @@
 #
-# Dockerfile for shadowsocks-libev and kcptun
+# Dockerfile for shadowsocks-libev and kcptun and polipo
 #
 
 FROM alpine
 MAINTAINER tofuliang@gmail.com
 
-ENV SS_VER 3.0.2
+ENV SS_VER 3.0.3
 ENV SS_URL https://github.com/shadowsocks/shadowsocks-libev/archive/v$SS_VER.tar.gz
 ENV SS_DIR shadowsocks-libev-$SS_VER
 
@@ -42,6 +42,7 @@ RUN set -ex \
     && cd $SS_DIR \
         && curl -sSL https://github.com/shadowsocks/ipset/archive/shadowsocks.tar.gz | tar xz --strip 1 -C libipset \
         && curl -sSL https://github.com/shadowsocks/libcork/archive/shadowsocks.tar.gz | tar xz --strip 1 -C libcork \
+        && curl -sSL https://github.com/shadowsocks/libbloom/archive/master.tar.gz | tar xz --strip 1 -C libbloom \
         && ./autogen.sh \
         && ./configure --disable-documentation \
         && make -j${NPROC} install \
@@ -54,6 +55,7 @@ RUN set -ex \
         && chmod a+x /usr/local/bin/cow \
         && mkdir /etc/cow \
         && curl -sSL https://raw.githubusercontent.com/cyfdecyf/cow/master/doc/sample-config/rc > /etc/cow/rc \
+    && { find /usr/local/bin  -type f -regex ".[^\.]*" -exec strip --strip-all '{}' + || true; } \
     && apk del TMP \
     && ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -P "" \
     && echo "PermitRootLogin yes"  >> /etc/ssh/sshd_config \
