@@ -8,6 +8,19 @@ if [ "" != "$KCP_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
     nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
 fi
 nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR --fast-open $SS_OPTIONS ${SS_DEBUG} &
+
+echo "proxyAddress = \"0.0.0.0\"" >> /etc/polipo/config \
+&& echo "socksParentProxy = \"127.0.0.1:${SS_LOCAL_PORT}\"" >> /etc/polipo/config \
+&& echo "socksProxyType = socks5" >> /etc/polipo/config \
+&& echo "diskCacheRoot = /var/cache/polipo" >> /etc/polipo/config \
+&& echo "pidFile = /var/run/polipo.pid" >> /etc/polipo/config \
+&& echo "allowedPorts = 1-65535" >> /etc/polipo/config \
+&& echo "daemonise = true" >> /etc/polipo/config \
+&& echo "dontCacheCookies = true" >> /etc/polipo/config \
+&& echo "maxAge = 1d" >> /etc/polipo/config \
+&& echo "serverTimeout = 30s" >> /etc/polipo/config \
+&& /usr/local/bin/polipo
+
 auth="authorization: Basic `echo $ARUKAS_TOKEN:$ARUKAS_SECERT|tr -d "\n" |base64|tr -d "\n"`"
 
 listContainerApi=https://app.arukas.io/api/containers
@@ -36,7 +49,7 @@ googleConnectFailedCount=0
 checkFeq=$ARUKAS_CHECK_FEQ
 
 checkGoogleConnection(){
-    t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:7777 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
+    t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:8123 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
     if [ "$t" != "" ];then
         echo $t
     else
@@ -251,11 +264,12 @@ resetGfwApp(){
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
             cp /etc/cow/rc /etc/cow/rc.run \
             && echo "alwaysProxy = ${GLOBAL_PROXY}" >> /etc/cow/rc.run \
-            && echo "loadBalance = latency" >> /etc/cow/rc.run \
+            && echo "loadBalance = backup" >> /etc/cow/rc.run \
             && echo "estimateTarget = www.google.com" >> /etc/cow/rc.run \
             && echo "dialTimeout = 3s" >> /etc/cow/rc.run \
             && echo "readTimeout = 2s" >> /etc/cow/rc.run \
             && echo "detectSSLErr = true" >> /etc/cow/rc.run \
+            && echo "proxy = http://127.0.0.1:8123" >> /etc/cow/rc.run \
             && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
             && echo "sshServer = root@${KCP_SERVER_ADDR}:8088:${SSH_SERVER_PORT}" >> /etc/cow/rc.run
             nohup cow -rc=/etc/cow/rc.run ${COW_DEBUG} -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
