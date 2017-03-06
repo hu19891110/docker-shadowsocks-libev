@@ -7,6 +7,9 @@ ssh-keygen -t rsa -f /root/.ssh/id_rsa -P ""
 if [ "" != "$KCP_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
     nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
 fi
+if [ "" != "$KCP_SSH_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
+    nohup kcp-client -l :$KCP_SSH_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SSH_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
+fi
 nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR --fast-open $SS_OPTIONS ${SS_DEBUG} &
 
 echo "proxyAddress = \"0.0.0.0\"" >> /etc/polipo/config \
@@ -29,7 +32,9 @@ listAppApi=https://app.arukas.io/api/apps
 
 DOCKER_IMAGE="tofuliang/docker-shadowsocks-libev:latest"
 _kcpServerPort=x
+_kcpSshServerPort=x
 _kcpUdpPortIndex=x
+_kcpSshUdpPortIndex=x
 _ssServerPort=x
 _ssTcpPortIndex=x
 _sshTcpPortIndex=x
@@ -64,6 +69,7 @@ copyIdRsa(){
         sshpass -p "${SSH_PASS}" scp -o StrictHostKeyChecking=no -P${SSH_SERVER_PORT} /root/.ssh/id_rsa.pub root@${KCP_SERVER_ADDR}:/tmp/$(hostname)
         sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${SSH_SERVER_PORT} root@${KCP_SERVER_ADDR} "mkdir -p /root/.ssh"
         sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${SSH_SERVER_PORT} root@${KCP_SERVER_ADDR} "cat /tmp/$(hostname) >> /root/.ssh/authorized_keys && chmod -R 600 /root/.ssh/"
+        sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no -p${KCP_SSH_LOCAL_PORT} root@127.0.0.1 "ls /root/.ssh"
 
         echo "Host ss" > ~/.ssh/config
         echo "HostName ${KCP_SERVER_ADDR}"  >> ~/.ssh/config
@@ -97,7 +103,7 @@ query() {
 createApp(){
     echo "[EVENT] "`getLocalTime`" creating app..."
     KCP_SRV_OPTION=`echo $KCP_OPTIONS|sed 's/--conn\s*[0-9]*//g'|sed 's/--autoexpire\s*[0-9]*//g'`
-    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp-${ARUKAS_CONTAINER_NAME}\"} } ] }"
+    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_SSH_SERVER_PORT\", \"value\": \"${KCP_SSH_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp-${ARUKAS_CONTAINER_NAME}\"} } ] }"
 }
 
 powerUpContainer(){
@@ -212,6 +218,9 @@ resetGfwApp(){
             if [ "$_env" = "KCP_SERVER_PORT" ] ;then
                 _kcpServerPort=$(echo $_envs |jq '.['$i'].value'|sed 's/"//g' 2>/dev/null)
             fi
+            if [ "$_env" = "KCP_SSH_SERVER_PORT" ] ;then
+                _kcpSshServerPort=$(echo $_envs |jq '.['$i'].value'|sed 's/"//g' 2>/dev/null)
+            fi
             if [ "$_env" = "SS_SERVER_PORT" ] ;then
                 _ssServerPort=$(echo $_envs |jq '.['$i'].value'|sed 's/"//g' 2>/dev/null)
             fi
@@ -224,6 +233,9 @@ resetGfwApp(){
             if [ "$_protocol" = "udp" ] && [ "$_protocol_port" = "$_kcpServerPort" ] ;then
                 _kcpUdpPortIndex=$i
             fi
+            if [ "$_protocol" = "udp" ] && [ "$_protocol_port" = "$_kcpSshServerPort" ] ;then
+                _kcpSshUdpPortIndex=$i
+            fi
             if [ "$_protocol" = "tcp" ] && [ "$_protocol_port" = "$_ssServerPort" ] ;then
                 _ssTcpPortIndex=$i
             fi
@@ -233,6 +245,7 @@ resetGfwApp(){
         done
 
         open_udp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_kcpUdpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
+        open_ssh_udp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_kcpSshUdpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
         open_host=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_kcpUdpPortIndex'].host'|sed 's/"//g' 2>/dev/null)
         open_tcp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_ssTcpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
         ssh_tcp_port=$(echo $containerInfo|jq '.attributes.port_mappings[0]['$_sshTcpPortIndex'].service_port'|sed 's/"//g' 2>/dev/null)
@@ -241,6 +254,7 @@ resetGfwApp(){
 
         [ "$SS_SERVER_PORT" != "$open_tcp_port" ] && [ "null" != "$open_tcp_port" ] && [ "" != "$open_tcp_port" ] && SS_SERVER_PORT=$open_tcp_port && restart=true && export SS_SERVER_PORT
         [ "$KCP_SERVER_PORT" != "$open_udp_port" ] && [ "null" != "$open_udp_port" ] && [ "" != "$open_udp_port" ] && KCP_SERVER_PORT=$open_udp_port && restart=true && export KCP_SERVER_PORT
+        [ "$KCP_SSH_SERVER_PORT" != "$open_ssh_udp_port" ] && [ "null" != "$open_ssh_udp_port" ] && [ "" != "$open_ssh_udp_port" ] && KCP_SSH_SERVER_PORT=$open_ssh_udp_port && restart=true && export KCP_SSH_SERVER_PORT
         [ "$KCP_SERVER_ADDR" != "$open_host" ] && [ "null" != "$open_host" ] && [ "" != "$open_host" ] && KCP_SERVER_ADDR=$open_host && restart=true && export KCP_SERVER_ADDR
         [ "$SSH_SERVER_PORT" != "$ssh_tcp_port" ] && [ "null" != "$ssh_tcp_port" ] && [ "" != "$ssh_tcp_port" ] && SSH_SERVER_PORT=$ssh_tcp_port && restart=true && export SSH_SERVER_PORT
 
@@ -248,6 +262,7 @@ resetGfwApp(){
             echo "[EVENT] "`getLocalTime`
             echo "[EVENT] KCP_SERVER_ADDR: $KCP_SERVER_ADDR"
             echo "[EVENT] KCP_SERVER_PORT: $KCP_SERVER_PORT"
+            echo "[EVENT] KCP_SSH_SERVER_PORT: $KCP_SSH_SERVER_PORT"
             echo "[EVENT] SSH_SERVER_PORT: $SSH_SERVER_PORT"
             echo "[EVENT] SS_SERVER_PORT: $SS_SERVER_PORT"
             if [ `ps aux |grep kcp|grep -v grep|wc -l` -gt 0 ]; then
@@ -262,6 +277,8 @@ resetGfwApp(){
             copyIdRsa
 
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
+            nohup kcp-client -l :$KCP_SSH_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SSH_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
+
             cp /etc/cow/rc /etc/cow/rc.run \
             && echo "alwaysProxy = ${GLOBAL_PROXY}" >> /etc/cow/rc.run \
             && echo "loadBalance = backup" >> /etc/cow/rc.run \
@@ -271,6 +288,7 @@ resetGfwApp(){
             && echo "detectSSLErr = true" >> /etc/cow/rc.run \
             && echo "proxy = http://127.0.0.1:8123" >> /etc/cow/rc.run \
             && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
+            && echo "sshServer = root@127.0.0.1:8089:${KCP_SSH_LOCAL_PORT}" >> /etc/cow/rc.run \
             && echo "sshServer = root@${KCP_SERVER_ADDR}:8088:${SSH_SERVER_PORT}" >> /etc/cow/rc.run
             nohup cow -rc=/etc/cow/rc.run ${COW_DEBUG} -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
         fi
