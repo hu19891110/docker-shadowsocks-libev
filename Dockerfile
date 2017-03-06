@@ -75,6 +75,7 @@ RUN set -ex \
     && echo "echo root:\$SSH_PASS|chpasswd;" >> /usr/local/bin/server.sh \
     && echo "/usr/sbin/sshd;" >> /usr/local/bin/server.sh \
     && echo "nohup kcp-server -l :\$KCP_SERVER_PORT -t 127.0.0.1:\$SS_SERVER_PORT --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
+    && echo "nohup kcp-server -l :\$KCP_SSH_SERVER_PORT -t 127.0.0.1:22 --crypt \$KCP_CRYPT --mtu \$KCP_MTU --mode \$KCP_MODE --dscp \$KCP_DSCP \$KCP_OPTIONS &" >> /usr/local/bin/server.sh \
     && echo "ss-server -s "\$SS_SERVER_ADDR" -p "\$SS_SERVER_PORT" -m "\$SS_METHOD" -k "\$SS_PASSWORD" -t "\$SS_TIMEOUT" -d "\$DNS_ADDR" -u --fast-open \$SS_OPTIONS" >> /usr/local/bin/server.sh \
     && chmod a+x /usr/local/bin/server.sh
 
@@ -93,6 +94,7 @@ ENV SSH_PASS=toor
 
 ENV KCP_SERVER_ADDR=
 ENV KCP_SERVER_PORT 33493
+ENV KCP_SSH_SERVER_PORT 33494
 ENV KCP_LOCAL_PORT 33493
 ENV KCP_CRYPT aes-128
 ENV KCP_MTU 1350
