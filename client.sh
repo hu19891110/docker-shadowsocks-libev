@@ -54,12 +54,16 @@ googleConnectFailedCount=0
 checkFeq=$ARUKAS_CHECK_FEQ
 
 checkGoogleConnection(){
-    t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:8123 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
-    if [ "$t" != "" ];then
-        echo $t
-    else
-        echo 0
-    fi
+    for i in `seq 0 10`;do
+        t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:8123 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
+        if [ "$t" != "" ];then
+            break
+        else
+            t=0
+            sleep 3
+        fi
+    done
+    echo $t
 }
 
 copyIdRsa(){
@@ -103,7 +107,7 @@ query() {
 createApp(){
     echo "[EVENT] "`getLocalTime`" creating app..."
     KCP_SRV_OPTION=`echo $KCP_OPTIONS|sed 's/--conn\s*[0-9]*//g'|sed 's/--autoexpire\s*[0-9]*//g'`
-    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_SSH_SERVER_PORT\", \"value\": \"${KCP_SSH_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp-${ARUKAS_CONTAINER_NAME}\"} } ] }"
+    query "POST" "$auth" "$createAppApi" "{\"data\": [{\"type\": \"containers\", \"attributes\": {\"image_name\": \"${DOCKER_IMAGE}\", \"instances\": 1, \"mem\": 512, \"cmd\": \"\", \"envs\": [{\"key\": \"SS_SERVER_PORT\", \"value\": \"${SS_SERVER_PORT}\"}, {\"key\": \"SS_METHOD\", \"value\": \"${SS_METHOD}\"}, {\"key\": \"SS_PASSWORD\", \"value\": \"${SS_PASSWORD}\"}, {\"key\": \"KCP_SERVER_PORT\", \"value\": \"${KCP_SERVER_PORT}\"}, {\"key\": \"KCP_SSH_SERVER_PORT\", \"value\": \"${KCP_SSH_SERVER_PORT}\"}, {\"key\": \"KCP_CRYPT\", \"value\": \"${KCP_CRYPT}\"}, {\"key\": \"KCP_DSCP\", \"value\": \"${KCP_DSCP}\"},{\"key\": \"KCP_MODE\", \"value\": \"${KCP_MODE}\"}, {\"key\": \"KCP_OPTIONS\", \"value\": \"${KCP_SRV_OPTION}\"}, {\"key\": \"KCP_MTU\", \"value\": \"${KCP_MTU}\"}, {\"key\": \"SSH_PASS\", \"value\": \"${SSH_PASS}\"} ], \"ports\": [{\"number\": ${SS_SERVER_PORT}, \"protocol\": \"tcp\"}, {\"number\": ${KCP_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": ${KCP_SSH_SERVER_PORT}, \"protocol\": \"udp\"}, {\"number\": 22, \"protocol\": \"tcp\"} ]} }, {\"type\": \"apps\", \"attributes\": {\"name\": \"ss-kcp-${ARUKAS_CONTAINER_NAME}\"} } ] }"
 }
 
 powerUpContainer(){
@@ -274,10 +278,10 @@ resetGfwApp(){
                 ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
             fi
 
-            copyIdRsa
-
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
             nohup kcp-client -l :$KCP_SSH_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SSH_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
+
+            copyIdRsa
 
             cp /etc/cow/rc /etc/cow/rc.run \
             && echo "alwaysProxy = ${GLOBAL_PROXY}" >> /etc/cow/rc.run \
@@ -287,8 +291,8 @@ resetGfwApp(){
             && echo "readTimeout = 2s" >> /etc/cow/rc.run \
             && echo "detectSSLErr = true" >> /etc/cow/rc.run \
             && echo "proxy = http://127.0.0.1:8123" >> /etc/cow/rc.run \
-            && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
             && echo "sshServer = root@127.0.0.1:8089:${KCP_SSH_LOCAL_PORT}" >> /etc/cow/rc.run \
+            && echo "proxy = socks5://127.0.0.1:${SS_LOCAL_PORT}" >> /etc/cow/rc.run \
             && echo "sshServer = root@${KCP_SERVER_ADDR}:8088:${SSH_SERVER_PORT}" >> /etc/cow/rc.run
             nohup cow -rc=/etc/cow/rc.run ${COW_DEBUG} -logFile=/dev/stdout -listen=http://${COW_LOCAL_ADDR}:${COW_LOCAL_PORT} &
         fi
