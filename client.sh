@@ -10,7 +10,6 @@ fi
 if [ "" != "$KCP_SSH_SERVER_PORT" ] &&  [ "" != "$KCP_SERVER_ADDR" ];then
     nohup kcp-client -l :$KCP_SSH_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SSH_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
 fi
-nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR --fast-open $SS_OPTIONS ${SS_DEBUG} &
 
 echo "proxyAddress = \"0.0.0.0\"" >> /etc/polipo/config \
 && echo "socksParentProxy = \"127.0.0.1:${SS_LOCAL_PORT}\"" >> /etc/polipo/config \
@@ -54,9 +53,10 @@ googleConnectFailedCount=0
 checkFeq=$ARUKAS_CHECK_FEQ
 
 checkGoogleConnection(){
-    for i in `seq 0 10`;do
+    for i in `seq 0 3`;do
         t=$(wget -T 3 --spider -S --no-check-certificate -e use_proxy=yes -e https_proxy=127.0.0.1:8123 https://www.youtube.com 2>&1|grep "HTTP/" |awk '{print $2}')
         if [ "$t" != "" ];then
+            googleConnectFailedCount=0
             break
         else
             t=0
@@ -145,6 +145,14 @@ deleteApps(){
         fi
     done
     idRsaCopyed=false
+    if [ `ps aux |grep cow|grep -v grep|wc -l` -gt 0 ]; then
+        echo "[EVENT] killing COW_CLIENT ..."
+        ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
+    fi
+    if [ `ps aux |grep ss-local|grep -v grep|wc -l` -gt 0 ]; then
+        echo "[EVENT] killing SS_CLIENT ..."
+        ps aux |grep ss-local|grep -v grep|awk '{print $1}' |xargs kill -9
+    fi
 }
 getContainerId(){
 #    echo "[EVENT] getting containerId..."
@@ -280,6 +288,7 @@ resetGfwApp(){
 
             nohup kcp-client -l :$KCP_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
             nohup kcp-client -l :$KCP_SSH_LOCAL_PORT -r $KCP_SERVER_ADDR:$KCP_SSH_SERVER_PORT --crypt $KCP_CRYPT --mtu $KCP_MTU --mode $KCP_MODE --dscp $KCP_DSCP $KCP_OPTIONS --log /dev/stdout &
+            nohup ss-local -s 127.0.0.1 -p $KCP_LOCAL_PORT  -l $SS_LOCAL_PORT -k $SS_PASSWORD -m $SS_METHOD -t $SS_TIMEOUT -b $SS_LOCAL_ADDR --fast-open $SS_OPTIONS ${SS_DEBUG} &
 
             copyIdRsa
 
@@ -310,7 +319,7 @@ resetGfwApp(){
 
     fi
 
-    if [ $noPortCount -gt 5 ];then
+    if [ $noPortCount -gt 3 ];then
         deleteApps
         echo $(createApp)
         sleep 5
@@ -321,7 +330,7 @@ resetGfwApp(){
         googleConnectFailedCount=0
     fi
 
-    if [ $googleConnectFailedCount -gt 2 ];then
+    if [ $googleConnectFailedCount -gt 4 ];then
         deleteApps
         echo $(createApp)
         sleep 5
@@ -332,7 +341,7 @@ resetGfwApp(){
         googleConnectFailedCount=0
     fi
 
-    if [ $noContainerCount -gt 5 ];then
+    if [ $noContainerCount -gt 3 ];then
         deleteApps
         echo $(createApp)
         sleep 5

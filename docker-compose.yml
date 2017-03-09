@@ -1,9 +1,8 @@
-client:
+ss1:
   image: tofuliang/docker-shadowsocks-libev:arukas
-  ports:
-    - "1082:1082/tcp" # ss-local 监听端口
-    - "1082:1082/udp" # ss-local 监听端口
-    - "7777:7777/tcp" # cow 监听端口
+  expose:
+      - 7777
+      - 1082
   environment:
 #    - DEBUG=true # 是否输出调试日志
     - TERM=xterm
@@ -33,3 +32,190 @@ client:
   command: /usr/local/bin/client.sh
   restart: always
 
+ss2:
+  image: tofuliang/docker-shadowsocks-libev:arukas
+  expose:
+      - 7777
+      - 1082
+  environment:
+#    - DEBUG=true # 是否输出调试日志
+    - TERM=xterm
+    - KCP_SERVER_PORT=31213 # KCP 服务器监听端口
+    - KCP_SSH_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SSH_LOCAL_PORT=33494 # KCP 本地监听端口
+    - KCP_CRYPT=salsa20  # KCP流量加密算法
+    - KCP_MTU=512 # KCP 参数
+    - KCP_MODE=fast2
+    - KCP_DSCP=0 # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5 --conn 2" # KCP 参数
+    - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
+    - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
+    - SS_METHOD=aes-256-gcm # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+#    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
+    - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
+    - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
+    - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
+#    - TIMEZONE=8 # 日志中时间采用时区
+#    - SSH_PASS=toor # SSH 登陆密码
+  command: /usr/local/bin/client.sh
+  restart: always
+
+ss3:
+  image: tofuliang/docker-shadowsocks-libev:arukas
+  expose:
+      - 7777
+      - 1082
+  environment:
+#    - DEBUG=true # 是否输出调试日志
+    - TERM=xterm
+    - KCP_SERVER_PORT=31213 # KCP 服务器监听端口
+    - KCP_SSH_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SSH_LOCAL_PORT=33494 # KCP 本地监听端口
+    - KCP_CRYPT=salsa20  # KCP流量加密算法
+    - KCP_MTU=512 # KCP 参数
+    - KCP_MODE=fast2
+    - KCP_DSCP=0 # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5 --conn 2" # KCP 参数
+    - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
+    - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
+    - SS_METHOD=aes-256-gcm # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+#    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
+    - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
+    - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
+    - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
+#    - TIMEZONE=8 # 日志中时间采用时区
+#    - SSH_PASS=toor # SSH 登陆密码
+  command: /usr/local/bin/client.sh
+  restart: always
+
+ss4:
+  image: tofuliang/docker-shadowsocks-libev:arukas
+  expose:
+      - 7777
+      - 1082
+  environment:
+#    - DEBUG=true # 是否输出调试日志
+    - TERM=xterm
+    - KCP_SERVER_PORT=31213 # KCP 服务器监听端口
+    - KCP_SSH_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SSH_LOCAL_PORT=33494 # KCP 本地监听端口
+    - KCP_CRYPT=salsa20  # KCP流量加密算法
+    - KCP_MTU=512 # KCP 参数
+    - KCP_MODE=fast2
+    - KCP_DSCP=0 # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5 --conn 2" # KCP 参数
+    - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
+    - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
+    - SS_METHOD=aes-256-gcm # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+#    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
+    - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
+    - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
+    - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
+#    - TIMEZONE=8 # 日志中时间采用时区
+#    - SSH_PASS=toor # SSH 登陆密码
+  command: /usr/local/bin/client.sh
+  restart: always
+
+ss5:
+  image: tofuliang/docker-shadowsocks-libev:arukas
+  expose:
+      - 7777
+      - 1082
+  environment:
+#    - DEBUG=true # 是否输出调试日志
+    - TERM=xterm
+    - KCP_SERVER_PORT=31213 # KCP 服务器监听端口
+    - KCP_SSH_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SSH_LOCAL_PORT=33494 # KCP 本地监听端口
+    - KCP_CRYPT=salsa20  # KCP流量加密算法
+    - KCP_MTU=512 # KCP 参数
+    - KCP_MODE=fast2
+    - KCP_DSCP=0 # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5 --conn 2" # KCP 参数
+    - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
+    - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
+    - SS_METHOD=aes-256-gcm # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+#    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
+    - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
+    - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
+    - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
+#    - TIMEZONE=8 # 日志中时间采用时区
+#    - SSH_PASS=toor # SSH 登陆密码
+  command: /usr/local/bin/client.sh
+  restart: always
+
+ss6:
+  image: tofuliang/docker-shadowsocks-libev:arukas
+  expose:
+      - 7777
+      - 1082
+  environment:
+#    - DEBUG=true # 是否输出调试日志
+    - TERM=xterm
+    - KCP_SERVER_PORT=31213 # KCP 服务器监听端口
+    - KCP_SSH_SERVER_PORT=31214 # KCP 服务器监听端口
+    - KCP_LOCAL_PORT=33493 # KCP 本地监听端口
+    - KCP_SSH_LOCAL_PORT=33494 # KCP 本地监听端口
+    - KCP_CRYPT=salsa20  # KCP流量加密算法
+    - KCP_MTU=512 # KCP 参数
+    - KCP_MODE=fast2
+    - KCP_DSCP=0 # KCP 参数
+    - "KCP_OPTIONS=--key 2TBltAzll6hx --sndwnd 512 --rcvwnd 512 --datashard 5 --parityshard 5 --conn 2" # KCP 参数
+    - SS_LOCAL_PORT=1082 # shadowsocks 监听端口
+    - SS_SERVER_PORT=23493
+    - SS_PASSWORD=247KuvJYXm9v # shadowsocks 密码
+    - SS_METHOD=aes-256-gcm # shadowsocks 流量加密算法
+    - SS_TIMEOUT=60  # shadowsocks 超时时间
+    - SS_LOCAL_ADDR=0.0.0.0 # shadowsocks 监听地址
+#    - SS_OPTIONS=  # shadowsocks 参数
+#    - GLOBAL_PROXY=true # 开启全局代理
+    - ARUKAS_TOKEN= # ARUKAS_TOKEN(必须填写)
+    - ARUKAS_SECERT= # ARUKAS_SECERT(必须填写)
+    - ARUKAS_CHECK_FEQ=40 # 每隔 N 秒检查代理可用性
+    - ARUKAS_CONTAINER_NAME=
+#    - TIMEZONE=8 # 日志中时间采用时区
+#    - SSH_PASS=toor # SSH 登陆密码
+  command: /usr/local/bin/client.sh
+  restart: always
+
+hap:
+    image: haproxy:alpine
+    volumes:
+        - ./haproxy:/haproxy-override
+        - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    links:
+        - ss1
+        - ss2
+        - ss3
+        - ss4
+        - ss5
+        - ss6
+    ports:
+        - "1082:1082/tcp"
+        - "1082:1082/udp"
+        - "7777:7777"
+        - "7778:7778"
