@@ -352,15 +352,6 @@ resetGfwApp(){
         googleConnectFailedCount=0
     fi
 
-    if [ $(($_updateTimeStamp - 1482364800)) -gt 0 ] && [ $((`date -u +%s` - $_updateTimeStamp)) -gt 86400 ] && [ $((`date -u +%H` + 8 - 3)) -gt 0 ];then
-        deleteApps
-        echo $(createApp)
-        sleep 5
-        echo $(powerUpContainer)
-        sleep 10
-        noPortCount=0
-        noContainerCount=0
-    fi
     echo "`getLocalTime` sleeping ${checkFeq} ..."
     sleep $checkFeq
 
