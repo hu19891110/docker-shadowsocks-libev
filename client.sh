@@ -145,14 +145,14 @@ deleteApps(){
         fi
     done
     idRsaCopyed=false
-    if [ `ps aux |grep cow|grep -v grep|wc -l` -gt 0 ]; then
-        echo "[EVENT] killing COW_CLIENT ..."
-        ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
-    fi
-    if [ `ps aux |grep ss-local|grep -v grep|wc -l` -gt 0 ]; then
-        echo "[EVENT] killing SS_CLIENT ..."
-        ps aux |grep ss-local|grep -v grep|awk '{print $1}' |xargs kill -9
-    fi
+#    if [ `ps aux |grep cow|grep -v grep|wc -l` -gt 0 ]; then
+#        echo "[EVENT] killing COW_CLIENT ..."
+#        ps aux |grep cow|grep -v grep|awk '{print $1}' |xargs kill -9
+#    fi
+#    if [ `ps aux |grep ss-local|grep -v grep|wc -l` -gt 0 ]; then
+#        echo "[EVENT] killing SS_CLIENT ..."
+#        ps aux |grep ss-local|grep -v grep|awk '{print $1}' |xargs kill -9
+#    fi
 }
 getContainerId(){
 #    echo "[EVENT] getting containerId..."
